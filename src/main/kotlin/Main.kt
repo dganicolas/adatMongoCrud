@@ -30,7 +30,7 @@ fun main() {
                 juegosService.eliminarJuegosPorGenero(genero)
             }
             "6" -> {
-                println("¡Hasta luego!")
+                println("cerrando conexion a la base de datos y programa")
                 juegosService.close()
                 break
             }

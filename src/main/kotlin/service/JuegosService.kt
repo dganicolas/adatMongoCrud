@@ -44,7 +44,7 @@ class JuegosService() {
             val inputFecha = readln()
             fechaLanzamiento = SimpleDateFormat("dd/MM/yyyy").parse(inputFecha)
         } catch (e: Exception) {
-            println("Error al leer la fecha de lanzamiento: ${e.message}")
+            println("Error al leer la fecha de lanzamiento: ${e.message} PONIENDO FECHA A DIA DE HOY")
         }
         val juego = Juego(nombre,genero,precio,fechaLanzamiento)
         subirJuego(juego)
@@ -55,7 +55,7 @@ class JuegosService() {
         return try {
             val database = ConexionMongo.getDatabase("nicolasDga")
             val collection = database.getCollection("juegos", Juego::class.java)
-            val count = collection.countDocuments(Document("nombre", nombre))
+            val count = collection.countDocuments(Document("titulo", nombre))
             count > 0
         } catch (e: Exception) {
             println("Error al verificar si existe un juego con el nombre \"$nombre\": ${e.message}")
