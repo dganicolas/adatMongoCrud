@@ -17,25 +17,17 @@ class JuegosService() {
         var fechaLanzamiento: Date = Date.from(Instant.now())
 
         do {
-            try {
                 println("¿Dime el nombre del juego?")
                 nombre = readln()
                 if (existeJuego(nombre)) {
                     println("Ya existe un juego con el nombre $nombre")
                     nombre = ""
                 }
-            } catch (e: Exception) {
-                println("Error al leer el nombre del juego: ${e.message}")
-            }
         } while (nombre.isBlank())
 
         do {
-            try {
-                println("¿Dime el género del juego?")
+                println("¿Dime el genero del juego?")
                 genero = readln()
-            } catch (e: Exception) {
-                println("Error al leer el género del juego: ${e.message}")
-            }
         } while (genero.isBlank())
         do {
             try {
@@ -55,20 +47,14 @@ class JuegosService() {
             println("Error al leer la fecha de lanzamiento: ${e.message}")
         }
         val juego = Juego(nombre,genero,precio,fechaLanzamiento)
-        println("Información del juego:")
-        println("Nombre: $nombre")
-        println("Género: $genero")
-        println("Precio: $precio")
-        println("Fecha de Lanzamiento: $fechaLanzamiento")
         subirJuego(juego)
+        println("Juego guardado")
     }
 
     private fun existeJuego(nombre: String): Boolean {
         return try {
             val database = ConexionMongo.getDatabase("nicolasDga")
             val collection = database.getCollection("juegos", Juego::class.java)
-
-            // Busca un documento con el campo "nombre" igual al proporcionado
             val count = collection.countDocuments(Document("nombre", nombre))
             count > 0
         } catch (e: Exception) {
@@ -97,7 +83,7 @@ class JuegosService() {
         val database = ConexionMongo.getDatabase("nicolasDga")
         val collection: MongoCollection<Juego> = database.getCollection("juegos", Juego::class.java)
         val juegos = collection.find(Document("genero", genero))
-            .sort(Document("titulo", 1)) // Orden ascendente por nombre
+            .sort(Document("titulo", 1))
             .toList()
 
         juegos.forEach{
@@ -108,24 +94,24 @@ class JuegosService() {
     fun eliminarJuegosPorGenero(genero: String) {
         try {
             println("¿Estás seguro de que deseas eliminar todos los juegos del género \"$genero\"? (sí/no)")
-            val confirmacion = readln().toLowerCase()
+            val confirmacion = readln().lowercase(Locale.getDefault())
 
-            if (confirmacion == "sí" || confirmacion == "si") {
+            if (confirmacion == "sí" || confirmacion == "si" || confirmacion == "s") {
                 val database = ConexionMongo.getDatabase("nicolasDga")
                 val collection = database.getCollection("juegos", Juego::class.java)
 
                 val result = collection.deleteMany(Document("genero", genero))
 
                 if (result.deletedCount > 0) {
-                    println("Se han eliminado ${result.deletedCount} juegos del género \"$genero\".")
+                    println("Se han eliminado ${result.deletedCount} juegos del género $genero.")
                 } else {
-                    println("No se encontraron juegos para eliminar con el género \"$genero\".")
+                    println("No se encontraron juegos para eliminar con el género $genero.")
                 }
             } else {
                 println("Operación cancelada. No se han eliminado juegos.")
             }
         } catch (e: Exception) {
-            println("Error al eliminar los juegos del género \"$genero\": ${e.message}")
+            println("Error al eliminar los juegos del género $genero: ${e.message}")
         }
     }
 
@@ -135,21 +121,18 @@ class JuegosService() {
             val nombre = readln()
             val database = ConexionMongo.getDatabase("nicolasDga")
             val collection = database.getCollection("juegos", Juego::class.java)
-
-            // Buscamos el juego por su nombre
             val juego = collection.find(Document("titulo", nombre)).first()
 
             if (juego != null) {
                 println("Juego existente: ${juego.titulo} - ${juego.genero} - ${juego.precio} - ${juego.fechaLanzamiento}")
 
-                // Modificar los campos
                 println("¿Deseas modificar el nombre del juego? (Deja en blanco para no cambiarlo)")
                 val nuevoNombre = readln()
-                val nombreFinal = if (nuevoNombre.isNotBlank()) nuevoNombre else juego.titulo
+                val nombreFinal = nuevoNombre.ifBlank { juego.titulo }
 
                 println("¿Deseas modificar el género del juego? (Deja en blanco para no cambiarlo)")
                 val nuevoGenero = readln()
-                val generoFinal = if (nuevoGenero.isNotBlank()) nuevoGenero else juego.genero
+                val generoFinal = nuevoGenero.ifBlank { juego.genero }
 
                 println("¿Deseas modificar el precio del juego? (Deja en blanco para no cambiarlo)")
                 val nuevoPrecio = readln()
@@ -161,7 +144,6 @@ class JuegosService() {
                         SimpleDateFormat("dd/MM/yyyy").parse(nuevaFecha)
                 } else juego.fechaLanzamiento
 
-                // Actualizar el juego en la base de datos
                 val filtro = Document("titulo", juego.titulo)
                 val actualizacion = Document("\$set", Document("nombre", nombreFinal)
                     .append("genero", generoFinal)
